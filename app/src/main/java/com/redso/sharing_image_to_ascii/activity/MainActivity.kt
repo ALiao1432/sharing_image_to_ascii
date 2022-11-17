@@ -3,9 +3,6 @@ package com.redso.sharing_image_to_ascii.activity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
 import android.os.Bundle
 import android.util.Size
 import android.widget.Toast
@@ -22,9 +19,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.common.util.concurrent.ListenableFuture
 import com.redso.sharing_image_to_ascii.databinding.ActivityMainBinding
-import com.redso.sharing_image_to_ascii.extension.BitmapRotateDegree
-import com.redso.sharing_image_to_ascii.extension.rotate
-import com.redso.sharing_image_to_ascii.extension.scale
 import com.redso.sharing_image_to_ascii.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,12 +39,11 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.CAMERA
     ).toTypedArray()
     private val REQUEST_CODE_PERMISSIONS = 10
-    private val targetResolution = Resolution.P_360.size
+    private val targetResolution = Resolution.CUSTOM.size
     private lateinit var binding: ActivityMainBinding
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var imageCapture: ImageCapture
-    private val asciiText = "            .,_-~'=+^:;cba!?IO0123456789B$&WM#@Ñ☯🀫◉✿☻︎"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,7 +115,7 @@ class MainActivity : AppCompatActivity() {
             setSurfaceProvider(binding.previewView.surfaceProvider)
         }
         imageCapture = ImageCapture.Builder()
-            .setTargetResolution(Resolution.CUSTOM.size)
+            .setTargetResolution(targetResolution)
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setFlashMode(ImageCapture.FLASH_MODE_OFF)
             .build()
@@ -143,15 +136,8 @@ class MainActivity : AppCompatActivity() {
         imageCapture.apply {
             takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    val bitmap = imageProxyToBitmap(image)
-                        .rotate(BitmapRotateDegree.Degree_90)
-                        .scale(Size(60, 80))
-                    val luminanceArray = Array(bitmap.height) { IntArray(bitmap.width) }
-                    for (j in 0 until bitmap.height) {
-                        for (i in 0 until bitmap.width) {
-                            luminanceArray[j][i] = (bitmap.getColor(i, j).luminance() * 100).toInt()
-                        }
-                    }
+                    val bitmap = binding.viewModel?.getProcessBitmap(image) ?: return
+                    val luminanceArray = binding.viewModel?.getLuminanceArray(bitmap) ?: return
 
                     lifecycleScope.launch(Dispatchers.Main) {
                         binding.resultImageView.setImageBitmap(bitmap)
@@ -166,27 +152,10 @@ class MainActivity : AppCompatActivity() {
     private fun appendLuminanceToTextView(luminanceArray: Array<IntArray>) {
         var resultText = ""
         luminanceArray.forEach { row ->
-            val asciiArray = row.map { getAsciiTextByLuminance(it) }.reduce { acc, s -> "$acc$s " }
+            val asciiArray = row.map { binding.viewModel?.getAsciiTextByLuminance(it) ?: " " }
+                .reduce { acc, s -> "$acc$s " }
             resultText += asciiArray + "\n"
         }
         binding.resultTextView.text = resultText
-    }
-
-    private fun getAsciiTextByLuminance(luminance: Int): String {
-        var index = asciiText.length * luminance / 100
-        if (index == asciiText.length) {
-            index -= 1
-        }
-        return asciiText[index].toString()
-    }
-
-    private fun imageProxyToBitmap(image: ImageProxy): Bitmap {
-        val planeProxy = image.planes[0]
-        val buffer = planeProxy.buffer
-        val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes)
-        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        buffer.clear()
-        return bitmap
     }
 }
