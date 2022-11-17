@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">sharing_image_to_ascii</string>
+    <string name="txt_permission_not_granted_hint">This app needs all permissions.</string>
+</resources>
