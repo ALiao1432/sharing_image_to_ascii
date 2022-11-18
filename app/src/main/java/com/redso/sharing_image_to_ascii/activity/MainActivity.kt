@@ -2,9 +2,15 @@ package com.redso.sharing_image_to_ascii.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.Bundle
+import android.os.Handler
 import android.util.Size
+import android.view.PixelCopy
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,20 +21,24 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.common.util.concurrent.ListenableFuture
+import com.redso.sharing_image_to_ascii.R
 import com.redso.sharing_image_to_ascii.databinding.ActivityMainBinding
 import com.redso.sharing_image_to_ascii.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 enum class Resolution(val size: Size) {
-    CUSTOM(Size(3, 4)),
+    CUSTOM(Size(100, 216)),
     P_360(Size(480, 360)),
     HD(Size(1920, 1080)),
     QHD(Size(2560, 1440)),
@@ -45,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var imageCapture: ImageCapture
+    private var sharingFile: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,9 +67,8 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater).apply {
             viewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java].apply {
-                handleShotButtonViewClicked = {
-                    takePhoto()
-                }
+                handleShotButtonViewClicked = { takePhoto() }
+                handleSharingButtonImageClicked = { shareResult() }
             }
             setContentView(root)
         }
@@ -68,6 +78,7 @@ class MainActivity : AppCompatActivity() {
     private fun initViews() {
         binding.apply {
             shotButtonView.setOnClickListener { viewModel?.handleShotButtonViewClicked?.invoke() }
+            sharingButtonView.setOnClickListener { viewModel?.handleSharingButtonImageClicked?.invoke() }
         }
     }
 
@@ -140,7 +151,7 @@ class MainActivity : AppCompatActivity() {
         }
         imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
-                val bitmap = binding.viewModel?.getProcessBitmap(image) ?: return
+                val bitmap = binding.viewModel?.getProcessBitmap(image, targetResolution) ?: return
                 val luminanceArray = binding.viewModel?.getLuminanceArray(bitmap) ?: return
 
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -164,5 +175,84 @@ class MainActivity : AppCompatActivity() {
             resultText += asciiArray + "\n"
         }
         binding.resultTextView.text = resultText
+    }
+
+    private fun shareFile(file: File) {
+        val uri =
+            FileProvider.getUriForFile(this, "com.redso.sharing_image_tp_ascii.provider", file)
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "image/jpeg"
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+        startActivity(
+            Intent.createChooser(
+                shareIntent,
+                getString(R.string.txt_sharing_image_title)
+            )
+        )
+    }
+
+    private fun getBitmapFromView(view: View, activity: Activity, callback: (Bitmap) -> Unit) {
+        activity.window?.let { window ->
+            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+            val locationOfViewInWindow = IntArray(2)
+            view.getLocationInWindow(locationOfViewInWindow)
+            try {
+                PixelCopy.request(
+                    window,
+                    Rect(
+                        locationOfViewInWindow[0],
+                        locationOfViewInWindow[1],
+                        locationOfViewInWindow[0] + view.width,
+                        locationOfViewInWindow[1] + view.height
+                    ),
+                    bitmap,
+                    { copyResult ->
+                        if (copyResult == PixelCopy.SUCCESS) {
+                            callback(bitmap)
+                        }
+                        // possible to handle other result codes ...
+                    },
+                    Handler()
+                )
+            } catch (e: IllegalArgumentException) {
+                // PixelCopy may throw IllegalArgumentException, make sure to handle it
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun shareResult() {
+        fun showNoImageHintToast() {
+            Toast.makeText(
+                this@MainActivity,
+                getString(R.string.txt_sharing_image_no_file_yet),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        if (binding.resultTextView.text.isEmpty()) {
+            showNoImageHintToast()
+            return
+        }
+
+        setBottomButtonVisibility(false)
+        lifecycleScope.launch(Dispatchers.IO) {
+            delay(50)
+            launch(Dispatchers.Main) {
+                getBitmapFromView(binding.resultTextView, this@MainActivity) { bitmap ->
+                    setBottomButtonVisibility(true)
+                    binding.viewModel?.convertBitmapToFile(bitmap)?.let { shareFile(it) }
+                        ?: run { showNoImageHintToast() }
+                }
+            }
+        }
+    }
+
+    private fun setBottomButtonVisibility(isVisible: Boolean) {
+        binding.apply {
+            val visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
+            shotButtonView.visibility = visibility
+            sharingButtonView.visibility = visibility
+        }
     }
 }

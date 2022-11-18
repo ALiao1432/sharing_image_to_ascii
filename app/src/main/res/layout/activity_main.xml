@@ -31,7 +31,7 @@
             android:letterSpacing="0.005"
             android:textAlignment="center"
             android:textColor="#2ec438"
-            android:textSize="3.3sp"
+            android:textSize="2.5sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -73,6 +73,18 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/shotButtonView" />
+
+        <ImageButton
+            android:id="@+id/sharingButtonView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/share_48px"
+            app:layout_constraintBottom_toTopOf="@id/shotButtonView"
+            app:layout_constraintEnd_toEndOf="@id/shotButtonView"
+            app:layout_constraintStart_toStartOf="@id/shotButtonView"
+            app:tint="@color/white" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

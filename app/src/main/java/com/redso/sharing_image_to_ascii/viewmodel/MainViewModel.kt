@@ -8,10 +8,15 @@ import androidx.lifecycle.ViewModel
 import com.redso.sharing_image_to_ascii.extension.BitmapRotateDegree
 import com.redso.sharing_image_to_ascii.extension.rotate
 import com.redso.sharing_image_to_ascii.extension.scale
+import com.redso.sharing_image_to_ascii.util.MyApp
+import java.io.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainViewModel : ViewModel() {
     private val asciiText = "            .,_-~'=+^:;cba!?IO0123456789B$&WM#@Ñ☯🀫◉✿☻︎"
     var handleShotButtonViewClicked: (() -> Unit)? = null
+    var handleSharingButtonImageClicked: (() -> Unit)? = null
 
     private fun imageProxyToBitmap(image: ImageProxy): Bitmap {
         val planeProxy = image.planes[0]
@@ -23,9 +28,9 @@ class MainViewModel : ViewModel() {
         return bitmap
     }
 
-    fun getProcessBitmap(image: ImageProxy) = imageProxyToBitmap(image)
+    fun getProcessBitmap(image: ImageProxy, scaleSize: Size) = imageProxyToBitmap(image)
         .rotate(BitmapRotateDegree.Degree_90)
-        .scale(Size(60, 80))
+        .scale(scaleSize)
 
     fun getLuminanceArray(bitmap: Bitmap): Array<IntArray> {
         val luminanceArray = Array(bitmap.height) { IntArray(bitmap.width) }
@@ -43,5 +48,43 @@ class MainViewModel : ViewModel() {
             index -= 1
         }
         return asciiText[index].toString()
+    }
+
+    fun convertBitmapToFile(bitmap: Bitmap): File {
+        val FILENAME_DATETIME_FORMAT = "yyyy-MM-dd-EEE-HH_mm_ss"
+        val FILENAME_APPEND_NAME = "ascii.jpg"
+
+        val fileName = "${
+            SimpleDateFormat(
+                FILENAME_DATETIME_FORMAT,
+                Locale.ENGLISH
+            ).format(System.currentTimeMillis())
+        }_$FILENAME_APPEND_NAME"
+
+        //create a file to write bitmap data
+        val file = File(MyApp.me.cacheDir, fileName)
+        file.createNewFile()
+
+        //Convert bitmap to byte array
+        val bos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*ignored for PNG*/, bos)
+        val bitMapData = bos.toByteArray()
+
+        //write the bytes in file
+        var fos: FileOutputStream? = null
+        try {
+            fos = FileOutputStream(file)
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        }
+        try {
+            bos.close()
+            fos?.write(bitMapData)
+            fos?.flush()
+            fos?.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return file
     }
 }
