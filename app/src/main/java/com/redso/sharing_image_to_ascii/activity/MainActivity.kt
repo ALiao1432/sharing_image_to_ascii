@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
     private fun appendLuminanceToTextView(luminanceArray: Array<IntArray>) {
         var resultText = ""
         luminanceArray.forEach { row ->
-            val asciiArray = row.map { binding.viewModel?.getAsciiTextByLuminance(it) ?: " " }
+            val asciiArray = row.map { binding.viewModel?.getAsciiTextByLuminance(it) ?: "\u00A0" }
                 .reduce { acc, s -> "$acc$s " }
             resultText += asciiArray + "\n"
         }

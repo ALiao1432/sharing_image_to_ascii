@@ -47,7 +47,13 @@ class MainViewModel : ViewModel() {
         if (index == asciiText.length) {
             index -= 1
         }
-        return asciiText[index].toString()
+        var ascii = asciiText[index].toString()
+        if (ascii == " ") {
+            // replace space with unicode no-break space character
+            // for equal spacing between each char
+            ascii = "\u00A0"
+        }
+        return ascii
     }
 
     fun convertBitmapToFile(bitmap: Bitmap): File {
