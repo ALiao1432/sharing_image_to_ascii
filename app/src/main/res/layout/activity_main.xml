@@ -27,37 +27,52 @@
             android:id="@+id/resultTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textColor="@color/white"
             android:fontFamily="serif-monospace"
-            android:textSize="3.3sp"
             android:letterSpacing="0.005"
-            tools:text="wefwef\nwefwef"
+            android:textAlignment="center"
+            android:textColor="#2ec438"
+            android:textSize="3.3sp"
+            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="wefwef\nwefwef" />
 
         <androidx.camera.view.PreviewView
             android:id="@+id/previewView"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:layout_marginStart="12dp"
-            android:layout_marginBottom="12dp"
+            android:layout_marginTop="12dp"
             android:background="@android:color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:background="@android:color/holo_blue_light" />
 
         <ImageButton
             android:id="@+id/shotButtonView"
             android:layout_width="wrap_content"
-            android:background="@android:color/transparent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@android:color/transparent"
             android:src="@drawable/lens_blur_48px"
-            app:layout_constraintBottom_toBottomOf="@id/previewView"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/previewView"
             app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/loadHintText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif-monospace"
+            android:text="@string/txt_processing"
+            android:textColor="@color/white"
+            android:textSize="8sp"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/shotButtonView" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

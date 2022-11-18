@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Size
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -133,20 +134,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun takePhoto() {
-        imageCapture.apply {
-            takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
-                override fun onCaptureSuccess(image: ImageProxy) {
-                    val bitmap = binding.viewModel?.getProcessBitmap(image) ?: return
-                    val luminanceArray = binding.viewModel?.getLuminanceArray(bitmap) ?: return
-
-                    lifecycleScope.launch(Dispatchers.Main) {
-                        binding.resultImageView.setImageBitmap(bitmap)
-                        appendLuminanceToTextView(luminanceArray)
-                    }
-                    image.close()
-                }
-            })
+        binding.apply {
+            shotButtonView.isClickable = false
+            loadHintText.visibility = View.VISIBLE
         }
+        imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
+            override fun onCaptureSuccess(image: ImageProxy) {
+                val bitmap = binding.viewModel?.getProcessBitmap(image) ?: return
+                val luminanceArray = binding.viewModel?.getLuminanceArray(bitmap) ?: return
+
+                lifecycleScope.launch(Dispatchers.Main) {
+                    binding.apply {
+                        shotButtonView.isClickable = true
+                        loadHintText.visibility = View.INVISIBLE
+                        resultImageView.setImageBitmap(bitmap)
+                    }
+                    appendLuminanceToTextView(luminanceArray)
+                }
+                image.close()
+            }
+        })
     }
 
     private fun appendLuminanceToTextView(luminanceArray: Array<IntArray>) {
