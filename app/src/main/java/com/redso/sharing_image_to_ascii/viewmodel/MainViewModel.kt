@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainViewModel : ViewModel() {
-    private val asciiText = "            .,_-~'=+^:;cba!?IO0123456789B$&WM#@Ñ☯🀫◉✿☻︎"
+    private val asciiText = "            .,_˙-~ˋ'ˇ=+^:;cba!?([{IO0123456789B$&WM#@Ñ"
     var handleShotButtonViewClicked: (() -> Unit)? = null
     var handleSharingButtonImageClicked: (() -> Unit)? = null
 
@@ -47,13 +47,7 @@ class MainViewModel : ViewModel() {
         if (index == asciiText.length) {
             index -= 1
         }
-        var ascii = asciiText[index].toString()
-        if (ascii == " ") {
-            // replace space with unicode no-break space character
-            // for equal spacing between each char
-            ascii = "\u00A0"
-        }
-        return ascii
+        return asciiText[index].toString()
     }
 
     fun convertBitmapToFile(bitmap: Bitmap): File {

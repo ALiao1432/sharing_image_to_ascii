@@ -23,20 +23,6 @@
             android:background="@android:color/black"
             android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/resultTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="serif-monospace"
-            android:letterSpacing="0.005"
-            android:textAlignment="center"
-            android:textColor="#2ec438"
-            android:textSize="2.5sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="wefwef\nwefwef" />
-
         <androidx.camera.view.PreviewView
             android:id="@+id/previewView"
             android:layout_width="70dp"
@@ -48,6 +34,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:background="@android:color/holo_blue_light" />
+
+        <TextView
+            android:id="@+id/resultTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif-monospace"
+            android:letterSpacing="0"
+            android:lineHeight="2.5sp"
+            android:textAlignment="center"
+            android:textColor="#2ec438"
+            android:textSize="3sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="wefwef\nwefwef" />
 
         <ImageButton
             android:id="@+id/shotButtonView"
